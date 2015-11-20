@@ -10,7 +10,7 @@ import (
 //javascript temp file name
 const JS_FILE_NAME = "tem_js_to_phantom"
 
-var GOPATH = os.Getenv("GOPATH")
+var DefaultPhantomjsPath = "/bin/phantomjs"
 
 type Phantomer interface {
 	SetUserAgent(string)
@@ -28,7 +28,7 @@ type Phantom struct {
 func NewPhantom() Phantomer {
 	phantom := &Phantom{
 		jsFileName:    JS_FILE_NAME,
-		phantomjsPath: GOPATH + "/src/github.com/k4s/phantomgo/phantomjs/phantomjs",
+		phantomjsPath: DefaultPhantomjsPath,
 	}
 	phantom.CreatJsFile()
 	return phantom
@@ -77,6 +77,10 @@ func (self *Phantom) Start(args []string) (result io.ReadCloser, err error) {
 	return nil, errors.New("args error")
 }
 
+func (self *Phantom) SetPhantomjsPath(path string) {
+	self.phantomjsPath = path
+}
+
 //打开远程地址
 func (self *Phantom) Open(openArgs ...string) (stdout io.ReadCloser, err error) {
 	cmd := exec.Command(self.phantomjsPath, openArgs...)
@@ -108,8 +112,16 @@ func (self *Phantom) Exec(js string, args ...string) (stdout io.ReadCloser, err 
 	if err != nil {
 		return nil, err
 	}
+	err = self.DelTempJsfile()
 	return stdout, err
+}
 
+func (self *Phantom) DelTempJsfile() error {
+	cmd := exec.Command("rm", self.jsFileName)
+	err := cmd.Start()
+	if err != nil {
+		return err
+	}
 }
 
 //设置本地代理客户端
