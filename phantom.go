@@ -112,16 +112,8 @@ func (self *Phantom) Exec(js string, args ...string) (stdout io.ReadCloser, err 
 	if err != nil {
 		return nil, err
 	}
-	err = self.DelTempJsfile()
+	self.DestroyJsFile()
 	return stdout, err
-}
-
-func (self *Phantom) DelTempJsfile() error {
-	cmd := exec.Command("rm", self.jsFileName)
-	err := cmd.Start()
-	if err != nil {
-		return err
-	}
 }
 
 //设置本地代理客户端
