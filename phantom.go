@@ -14,7 +14,7 @@ var DefaultPhantomjsPath = "/bin/phantomjs"
 
 type Phantomer interface {
 	SetUserAgent(string)
-	SetPhantomjsPath(string, string)
+	SetPhantomjsPath(string)
 	Start(args []string) (io.ReadCloser, error)
 	Exec(string, ...string) (io.ReadCloser, error)
 }
@@ -30,7 +30,6 @@ func NewPhantom() Phantomer {
 		jsFileName:    JS_FILE_NAME,
 		phantomjsPath: DefaultPhantomjsPath,
 	}
-	phantom.CreatJsFile()
 	return phantom
 }
 
@@ -77,10 +76,6 @@ func (self *Phantom) Start(args []string) (result io.ReadCloser, err error) {
 	return nil, errors.New("args error")
 }
 
-func (self *Phantom) SetPhantomjsPath(path string) {
-	self.phantomjsPath = path
-}
-
 //打开远程地址
 func (self *Phantom) Open(openArgs ...string) (stdout io.ReadCloser, err error) {
 	cmd := exec.Command(self.phantomjsPath, openArgs...)
@@ -98,9 +93,8 @@ func (self *Phantom) Open(openArgs ...string) (stdout io.ReadCloser, err error) 
 //动态执行js
 //js为执行代码，args为命令行参数
 func (self *Phantom) Exec(js string, args ...string) (stdout io.ReadCloser, err error) {
-	file, _ := os.Create(self.jsFileName)
-	file.WriteString(js)
-	file.Close()
+	file := self.CreatJsFile(js)
+	defer file.Close()
 	var exeCommand []string
 	exeCommand = append(append(exeCommand, self.jsFileName), args...)
 	cmd := exec.Command(self.phantomjsPath, exeCommand...)
@@ -112,7 +106,7 @@ func (self *Phantom) Exec(js string, args ...string) (stdout io.ReadCloser, err 
 	if err != nil {
 		return nil, err
 	}
-	self.DestroyJsFile()
+	//self.DestroyJsFile()
 	return stdout, err
 }
 
@@ -122,16 +116,15 @@ func (self *Phantom) SetUserAgent(userAgent string) {
 }
 
 // 动态修改执行文件路径
-func (self *Phantom) SetPhantomjsPath(name string, filepath string) {
+func (self *Phantom) SetPhantomjsPath(filepath string) {
 	self.phantomjsPath = filepath
 }
 
 //创建js临时文件
-func (self *Phantom) CreatJsFile() {
-	js := loadjs()
+func (self *Phantom) CreatJsFile(js string) *os.File {
 	file, _ := os.Create(self.jsFileName)
 	file.WriteString(js)
-
+	return file
 }
 
 func (self *Phantom) DestroyJsFile() {
