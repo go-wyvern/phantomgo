@@ -39,3 +39,29 @@ func main() {
 	
 }
 ```
+```
+package main
+
+import (
+	"fmt"
+	"github.com/go-wyvern/phantomgo"
+	"io/ioutil"
+)
+
+func main() {
+	p := phantomgo.NewPhantom()
+	js := `var page = require('webpage').create();
+	page.open('http://github.com/', function() {
+	  page.render('github.png');
+	    phantom.exit();
+    });`
+	res, err := p.Exec(js)
+	if err != nil {
+		fmt.Println(err)
+	}
+	output, err := ioutil.ReadAll(res)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(string(output))
+}
